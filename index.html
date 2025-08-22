@@ -236,6 +236,37 @@
             align-items: center;
         }
 
+        .multiple-batteries {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            position: relative;
+        }
+
+        .parallel-indicator {
+            font-size: 2rem;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .battery-multiplier {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            background: #667eea;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+        }
+
         .lion-cell {
             width: 18px;
             height: 65px;
@@ -555,9 +586,9 @@
                         <div class="control-group">
                             <div class="control-label" id="voltageLabel">Max Voltage per Cell (V)</div>
                             <div class="control-input">
-                                <button class="control-btn" onclick="adjustVoltage(-0.01)">−</button>
-                                <input type="number" class="value-display" id="voltageDisplay" value="3.00" step="0.01" min="3.00" max="4.50">
-                                <button class="control-btn" onclick="adjustVoltage(0.01)">+</button>
+                                <button class="control-btn" onclick="adjustVoltage(-0.1)">−</button>
+                                <input type="number" class="value-display" id="voltageDisplay" value="3.00" step="0.1" min="3.00" max="4.50">
+                                <button class="control-btn" onclick="adjustVoltage(0.1)">+</button>
                             </div>
                             <div class="field-feedback" id="voltageFeedback" style="display: none;"></div>
                         </div>
@@ -566,7 +597,7 @@
                             <div class="control-label" id="currentLabel">Charging Current (A)</div>
                             <div class="control-input">
                                 <button class="control-btn" onclick="adjustCurrent(-0.1)">−</button>
-                                <input type="number" class="value-display" id="currentDisplay" value="0.00" step="0.1" min="0.0" max="10.0">
+                                <input type="number" class="value-display" id="currentDisplay" value="0.00" step="0.1" min="0.0" max="50.0">
                                 <button class="control-btn" onclick="adjustCurrent(0.1)">+</button>
                             </div>
                             <div class="field-feedback" id="currentFeedback" style="display: none;"></div>
@@ -596,7 +627,7 @@
                     <div class="submit-section">
                         <button class="submit-btn" id="checkBtn" onclick="checkAnswer()">Check Charging Parameters</button>
                         <div class="result-display" id="resultDisplay" style="display: none;"></div>
-                        <button class="new-question-btn" id="newQuestionBtn" onclick="generateNewQuestion()" style="display: none;">Next Question</button>
+                        <button class="new-question-btn" id="skipQuestionBtn" onclick="generateNewQuestion()">Skip Question</button>
                     </div>
                 </div>
             </div>
@@ -743,10 +774,33 @@
 
             getSafetyRating(current, voltage) {
                 const cRating = this.getCRating(current);
-                const correctVoltage = Math.abs(voltage - this.getMaxVoltagePerCell()) < 0.05;
+                const maxVoltage = this.getMaxVoltagePerCell();
                 const t = translations[currentLanguage];
                 
-                if (!correctVoltage) {
+                if (voltage < maxVoltage - 0.2) {
+                    // Below recommended voltage by more than 0.2V - "voltage too low" feedback
+                    const voltageTooLowMsg = currentLanguage === 'zh' ? 
+                        '电压过低 - Voltage too low' :
+                        'Voltage too low - 电压过低';
+                    
+                    return { level: 'dangerous', message: voltageTooLowMsg };
+                } else if (voltage < maxVoltage - 0.05) {
+                    // Below recommended voltage - "wrong voltage" feedback
+                    const typeMap = {
+                        'lipo': '锂聚合物电池',
+                        'hv': '高压锂聚合物电池',
+                        'lion': '锂离子电池'
+                    };
+                    const typeLabel = currentLanguage === 'zh' ? typeMap[this.type] : 
+                                     (this.type === 'hv' ? 'HV LiPo' : this.type === 'lion' ? 'Li-ion' : 'LiPo');
+                    
+                    const wrongVoltageMsg = currentLanguage === 'zh' ? 
+                        `电压错误！${typeLabel}应为${maxVoltage.toFixed(2)}V。` :
+                        `Wrong voltage! ${typeLabel} should be ${maxVoltage.toFixed(2)}V.`;
+                    
+                    return { level: 'dangerous', message: wrongVoltageMsg };
+                } else if (voltage > maxVoltage + 0.05) {
+                    // Above recommended voltage - keep "dangerous" feedback
                     const typeMap = {
                         'lipo': '锂聚合物电池',
                         'hv': '高压锂聚合物电池',
@@ -758,7 +812,7 @@
                     return { 
                         level: 'dangerous', 
                         message: t.incorrectVoltage
-                            .replace('{expected}', this.getMaxVoltagePerCell().toFixed(2))
+                            .replace('{expected}', maxVoltage.toFixed(2))
                             .replace('{type}', typeLabel)
                     };
                 }
@@ -936,20 +990,30 @@
             const container = document.getElementById('batteryVisualization');
             container.innerHTML = '';
 
-            if (currentDifficulty === 4 && battery.count > 1) {
-                // Balance charging visualization - single battery with multiplier
-                const balanceContainer = document.createElement('div');
-                balanceContainer.className = 'balance-charging';
-                
-                const batteryElement = createBatteryElement(battery);
-                balanceContainer.appendChild(batteryElement);
-                
+            if (battery.count > 1) {
+                // Multiple batteries - show visual multiplier
+                const multipleContainer = document.createElement('div');
+                multipleContainer.className = 'multiple-batteries';
+
+                for (let i = 0; i < Math.min(battery.count, 3); i++) {
+                    if (i > 0) {
+                        const plus = document.createElement('div');
+                        plus.className = 'parallel-indicator';
+                        plus.textContent = '+';
+                        multipleContainer.appendChild(plus);
+                    }
+                    
+                    const batteryElement = createBatteryElement(battery);
+                    multipleContainer.appendChild(batteryElement);
+                }
+
+                // Add multiplier indicator
                 const multiplier = document.createElement('div');
-                multiplier.className = 'balance-multiplier';
+                multiplier.className = 'battery-multiplier';
                 multiplier.textContent = `×${battery.count}`;
-                balanceContainer.appendChild(multiplier);
-                
-                container.appendChild(balanceContainer);
+                multipleContainer.appendChild(multiplier);
+
+                container.appendChild(multipleContainer);
             } else if (battery.type === 'lion' && battery.parallelCells > 1) {
                 // Li-ion with parallel cells
                 const lionContainer = document.createElement('div');
@@ -1021,7 +1085,6 @@
             hideAllFeedback();
             
             document.getElementById('resultDisplay').style.display = 'none';
-            document.getElementById('newQuestionBtn').style.display = 'none';
             
             renderBatteryVisualization(currentBattery);
         }
@@ -1030,13 +1093,13 @@
             const display = document.getElementById('voltageDisplay');
             const currentValue = parseFloat(display.value);
             const newValue = Math.max(3.00, Math.min(4.50, currentValue + delta));
-            display.value = newValue.toFixed(2);
+            display.value = newValue.toFixed(1);
         }
 
         function adjustCurrent(delta) {
             const display = document.getElementById('currentDisplay');
             const currentValue = parseFloat(display.value);
-            const newValue = Math.max(0.0, Math.min(10.0, currentValue + delta));
+            const newValue = Math.max(0.0, Math.min(50.0, currentValue + delta));
             display.value = newValue.toFixed(1);
         }
 
@@ -1111,7 +1174,7 @@
             resultDisplay.textContent = result.message;
             resultDisplay.style.display = 'block';
             
-            document.getElementById('newQuestionBtn').style.display = 'block';
+            // Result is now displayed, skip button remains visible
         }
 
         function updateLanguage(lang) {
@@ -1132,7 +1195,7 @@
             document.getElementById('minVoltageLabel').textContent = t.minVoltageLabel;
             document.getElementById('storageVoltageLabel').textContent = t.storageVoltageLabel;
             document.getElementById('checkBtn').textContent = t.checkBtn;
-            document.getElementById('newQuestionBtn').textContent = t.nextBtn;
+            document.getElementById('skipQuestionBtn').textContent = currentLanguage === 'zh' ? '跳过题目' : 'Skip Question';
             document.getElementById('minVoltageToggleLabel').textContent = t.checkMinVoltage;
             document.getElementById('storageVoltageToggleLabel').textContent = t.checkStorageVoltage;
             
@@ -1182,13 +1245,13 @@
             let value = parseFloat(this.value);
             if (isNaN(value)) value = 3.00;
             value = Math.max(3.00, Math.min(4.50, value));
-            this.value = value.toFixed(2);
+            this.value = value.toFixed(1);
         });
 
         document.getElementById('currentDisplay').addEventListener('input', function() {
             let value = parseFloat(this.value);
             if (isNaN(value)) value = 0.0;
-            value = Math.max(0.0, Math.min(10.0, value));
+            value = Math.max(0.0, Math.min(50.0, value));
             this.value = value.toFixed(1);
         });
 
