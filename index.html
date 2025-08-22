@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiPo Battery Charging Trainer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .difficulty-selector {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .difficulty-selector h3 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .difficulty-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .feature-toggles {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .toggle-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .toggle-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .language-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .language-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .language-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .language-btn.active {
+            background: white;
+            color: #667eea;
+            border-color: white;
+        }
+
+        .difficulty-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .difficulty-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .difficulty-btn.active {
+            background: white;
+            color: #667eea;
+            border-color: white;
+        }
+
+        .flashcard {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 500px;
+        }
+
+        .question-section {
+            background: #f8f9ff;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .answer-section {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .battery-info {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .battery-label {
+            background: #333;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .battery-visualization {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+            perspective: 1000px;
+            position: relative;
+        }
+
+        .lipo-battery {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .lipo-cell {
+            width: 60px;
+            height: 15px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            border-radius: 3px;
+            position: relative;
+            transform: rotateX(45deg) rotateY(15deg);
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .lipo-cell.hv {
+            background: linear-gradient(135deg, #ff9500, #ff6b00);
+        }
+
+        .lipo-cell::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(135deg, #ff8a8a, #ff6b6b);
+            border-radius: 3px 3px 0 0;
+        }
+
+        .lion-battery {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .lion-parallel {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .multiple-batteries {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            position: relative;
+        }
+
+        .parallel-indicator {
+            font-size: 2rem;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .battery-multiplier {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            background: #667eea;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+        }
+
+        .lion-cell {
+            width: 18px;
+            height: 65px;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            border-radius: 9px;
+            position: relative;
+            transform: rotateX(15deg) rotateY(15deg);
+            box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .lion-cell::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 4px;
+            background: #666;
+            border-radius: 2px;
+        }
+
+        .balance-charging {
+            position: relative;
+        }
+
+        .balance-multiplier {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .charger-interface {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .charger-display {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+        }
+
+        .cell-count-display {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .parameter-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .control-label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .control-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .control-btn {
+            width: 35px;
+            height: 35px;
+            border: none;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover {
+            background: #5a6fd8;
+            transform: scale(1.1);
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .value-display {
+            flex: 1;
+            text-align: center;
+            font-size: 1.2rem;
+            font-family: 'Courier New', monospace;
+            background: #fff;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            padding: 8px;
+            min-width: 80px;
+            transition: all 0.3s ease;
+        }
+
+        .value-display.good {
+            border-color: #4caf50;
+            background: #f1f8e9;
+        }
+
+        .value-display.acceptable {
+            border-color: #ff9800;
+            background: #fff8e1;
+        }
+
+        .value-display.dangerous {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+
+        .field-feedback {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            padding: 5px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .feedback-good {
+            color: #2e7d32;
+            background: #e8f5e8;
+        }
+
+        .feedback-acceptable {
+            color: #ef6c00;
+            background: #fff3e0;
+        }
+
+        .feedback-dangerous {
+            color: #c62828;
+            background: #ffebee;
+        }
+
+        .submit-section {
+            margin-top: 20px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .result-display {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .result-safe {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .result-fast {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .result-risky {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .result-dangerous {
+            background: #f5c6cb;
+            color: #721c24;
+        }
+
+        .new-question-btn {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .new-question-btn:hover {
+            background: #5a6fd8;
+        }
+
+        @media (max-width: 768px) {
+            .flashcard {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .difficulty-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .battery-visualization {
+                min-height: 150px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .question-section,
+            .answer-section {
+                padding: 20px;
+            }
+            
+            .control-input {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="mainTitle">LiPo Battery Charging Trainer</h1>
+            <p id="subtitle">Learn safe battery charging practices with interactive flashcards</p>
+        </div>
+
+        <div class="difficulty-selector">
+            <h3 id="difficultyTitle">Select Difficulty Level</h3>
+            <div class="difficulty-buttons">
+                <button class="difficulty-btn active" data-difficulty="1" id="level1">Level 1</button>
+                <button class="difficulty-btn" data-difficulty="2" id="level2">Level 2</button>
+                <button class="difficulty-btn" data-difficulty="3" id="level3">Level 3</button>
+                <button class="difficulty-btn" data-difficulty="4" id="level4">Level 4</button>
+                <button class="difficulty-btn" data-difficulty="5" id="level5">Level 5</button>
+            </div>
+            <div class="feature-toggles">
+                <div class="toggle-option">
+                    <input type="checkbox" id="minVoltageToggle" class="toggle-checkbox">
+                    <label for="minVoltageToggle" id="minVoltageToggleLabel">Check Minimum Voltage</label>
+                </div>
+                <div class="toggle-option">
+                    <input type="checkbox" id="storageVoltageToggle" class="toggle-checkbox">
+                    <label for="storageVoltageToggle" id="storageVoltageToggleLabel">Check Storage Voltage</label>
+                </div>
+            </div>
+            <div class="language-selector">
+                <span style="color: white; font-size: 0.9rem;">Language:</span>
+                <button class="language-btn active" data-lang="en">EN</button>
+                <button class="language-btn" data-lang="zh">中文</button>
+            </div>
+        </div>
+
+        <div class="flashcard">
+            <div class="question-section">
+                <div class="battery-info">
+                    <div class="battery-label" id="batteryLabel">7.4V 1500mAh 2S LiPo</div>
+                </div>
+                <div class="battery-visualization" id="batteryVisualization">
+                    <!-- Battery visualization will be generated here -->
+                </div>
+            </div>
+
+            <div class="answer-section">
+                <div class="charger-interface">
+                    <div class="charger-display">
+                        <div class="cell-count-display" id="cellCountDisplay">2S Battery Detected</div>
+                        <div id="chargerReady">Ready to Configure Charging Parameters</div>
+                    </div>
+
+                    <div class="parameter-controls">
+                        <div class="control-group">
+                            <div class="control-label" id="voltageLabel">Max Voltage per Cell (V)</div>
+                            <div class="control-input">
+                                <button class="control-btn" onclick="adjustVoltage(-0.1)">−</button>
+                                <input type="number" class="value-display" id="voltageDisplay" value="3.00" step="0.1" min="3.00" max="4.50">
+                                <button class="control-btn" onclick="adjustVoltage(0.1)">+</button>
+                            </div>
+                            <div class="field-feedback" id="voltageFeedback" style="display: none;"></div>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label" id="currentLabel">Charging Current (A)</div>
+                            <div class="control-input">
+                                <button class="control-btn" onclick="adjustCurrent(-0.1)">−</button>
+                                <input type="number" class="value-display" id="currentDisplay" value="0.00" step="0.1" min="0.0" max="50.0">
+                                <button class="control-btn" onclick="adjustCurrent(0.1)">+</button>
+                            </div>
+                            <div class="field-feedback" id="currentFeedback" style="display: none;"></div>
+                        </div>
+
+                        <div class="control-group" id="minVoltageGroup" style="display: none;">
+                            <div class="control-label" id="minVoltageLabel">Minimum Acceptable Voltage (V)</div>
+                            <div class="control-input">
+                                <button class="control-btn" onclick="adjustMinVoltage(-0.01)">−</button>
+                                <input type="number" class="value-display" id="minVoltageDisplay" value="2.00" step="0.01" min="2.00" max="4.00">
+                                <button class="control-btn" onclick="adjustMinVoltage(0.01)">+</button>
+                            </div>
+                            <div class="field-feedback" id="minVoltageFeedback" style="display: none;"></div>
+                        </div>
+
+                        <div class="control-group" id="storageVoltageGroup" style="display: none;">
+                            <div class="control-label" id="storageVoltageLabel">Storage Voltage per Cell (V)</div>
+                            <div class="control-input">
+                                <button class="control-btn" onclick="adjustStorageVoltage(-0.01)">−</button>
+                                <input type="number" class="value-display" id="storageVoltageDisplay" value="3.00" step="0.01" min="3.00" max="4.00">
+                                <button class="control-btn" onclick="adjustStorageVoltage(0.01)">+</button>
+                            </div>
+                            <div class="field-feedback" id="storageVoltageFeedback" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="submit-section">
+                        <button class="submit-btn" id="checkBtn" onclick="checkAnswer()">Check Charging Parameters</button>
+                        <div class="result-display" id="resultDisplay" style="display: none;"></div>
+                        <button class="new-question-btn" id="skipQuestionBtn" onclick="generateNewQuestion()">Skip Question</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentBattery = null;
+        let currentDifficulty = 1;
+        let currentLanguage = 'en';
+
+        const translations = {
+            en: {
+                title: "LiPo Battery Charging Trainer",
+                subtitle: "Learn safe battery charging practices with interactive flashcards",
+                difficultyTitle: "Select Difficulty Level",
+                level1: "Level 1 - Single LiPo (1-8S)",
+                level2: "Level 2 - LiPo & HV LiPo", 
+                level3: "Level 3 - All Battery Types",
+                level4: "Level 4 - Balance Charging",
+                level5: "Level 5 - Advanced Parallel",
+                detected: "S Battery Detected",
+                ready: "Ready to Configure Charging Parameters",
+                voltageLabel: "Max Voltage per Cell (V)",
+                currentLabel: "Charging Current (A)",
+                minVoltageLabel: "Minimum Acceptable Voltage (V)",
+                storageVoltageLabel: "Storage Voltage per Cell (V)",
+                checkBtn: "Check Charging Parameters",
+                nextBtn: "Next Question",
+                checkMinVoltage: "Check Minimum Voltage",
+                checkStorageVoltage: "Check Storage Voltage",
+                // Safety messages
+                safeCharging: "Safe charging at {rate}C rate.",
+                fastCharging: "Fast charging at {rate}C rate. Low risk but monitor temperature.",
+                riskyCharging: "Risky charging at {rate}C rate. High risk of damage.",
+                dangerousCharging: "Not recommended! {rate}C rate is extremely dangerous.",
+                incorrectVoltage: "Incorrect voltage setting! Expected {expected}V for {type}. This could damage the battery or cause fire.",
+                tooHighLiion: "Not recommended! {rate}C rate is too high for Li-ion.",
+                // Field feedback
+                correctChargingVoltage: "Correct charging voltage",
+                acceptableVoltageRange: "Acceptable voltage range",
+                dangerousVoltageLevel: "Dangerous voltage level!",
+                safeRate: "Safe {rate}C rate",
+                fastRate: "Fast {rate}C rate",
+                dangerousRate: "Dangerous {rate}C rate!",
+                correctMinimumVoltage: "Correct minimum voltage",
+                closeToCorrectMinimum: "Close to correct minimum",
+                shouldBeMinVoltage: "Should be {voltage}V",
+                correctStorageVoltage: "Correct storage voltage",
+                closeToCorrectStorage: "Close to correct storage voltage",
+                shouldBeStorageVoltage: "Should be {voltage}V"
+            },
+            zh: {
+                title: "锂电池充电训练器",
+                subtitle: "通过互动卡片学习安全的电池充电方法",
+                difficultyTitle: "选择难度级别",
+                level1: "级别 1 - 单个锂聚合物电池 (1-8串)",
+                level2: "级别 2 - 锂聚合物电池和高压锂聚合物电池",
+                level3: "级别 3 - 所有电池类型",
+                level4: "级别 4 - 平衡充电",
+                level5: "级别 5 - 高级并联充电",
+                detected: "串 电池已检测",
+                ready: "准备配置充电参数",
+                voltageLabel: "每节电池最大电压 (V)",
+                currentLabel: "充电电流 (A)",
+                minVoltageLabel: "最低可接受电压 (V)",
+                storageVoltageLabel: "每节电池存储电压 (V)",
+                checkBtn: "检查充电参数",
+                nextBtn: "下一题",
+                checkMinVoltage: "检查最低电压",
+                checkStorageVoltage: "检查存储电压",
+                // Safety messages
+                safeCharging: "{rate}C倍率安全充电。",
+                fastCharging: "{rate}C倍率快速充电。风险较低但需监控温度。",
+                riskyCharging: "{rate}C倍率危险充电。损坏风险很高。",
+                dangerousCharging: "不推荐！{rate}C倍率极其危险。",
+                incorrectVoltage: "电压设置错误！{type}应为{expected}V。这可能损坏电池或引起火灾。",
+                tooHighLiion: "不推荐！{rate}C倍率对锂离子电池过高。",
+                // Field feedback
+                correctChargingVoltage: "充电电压正确",
+                acceptableVoltageRange: "可接受的电压范围",
+                dangerousVoltageLevel: "危险电压级别！",
+                safeRate: "安全 {rate}C倍率",
+                fastRate: "快速 {rate}C倍率",
+                dangerousRate: "危险 {rate}C倍率！",
+                correctMinimumVoltage: "最低电压正确",
+                closeToCorrectMinimum: "接近正确的最低值",
+                shouldBeMinVoltage: "应为 {voltage}V",
+                correctStorageVoltage: "存储电压正确",
+                closeToCorrectStorage: "接近正确的存储电压",
+                shouldBeStorageVoltage: "应为 {voltage}V"
+            }
+        };
+
+        class Battery {
+            constructor(type, cells, capacity, count = 1, parallelCells = 1) {
+                this.type = type; // 'lipo', 'hv', or 'lion'
+                this.cells = cells;
+                this.capacity = capacity;
+                this.count = count; // for balance charging (level 4)
+                this.parallelCells = parallelCells; // for Li-ion parallel configurations (level 5)
+            }
+
+            getLabel() {
+                const nominalVoltage = this.type === 'lion' ? 3.6 : 3.7;
+                const voltage = (this.cells * nominalVoltage).toFixed(1);
+                let typeLabel = '';
+                
+                switch(this.type) {
+                    case 'lipo': typeLabel = 'LiPo'; break;
+                    case 'hv': typeLabel = 'HV LiPo'; break;
+                    case 'lion': 
+                        if (this.parallelCells > 1) {
+                            typeLabel = `Li-ion ${this.parallelCells}P`;
+                        } else {
+                            typeLabel = 'Li-ion';
+                        }
+                        break;
+                }
+                
+                if (this.count > 1) {
+                    return `${this.count}x ${voltage}V ${this.capacity}mAh ${this.cells}S ${typeLabel}`;
+                }
+                return `${voltage}V ${this.capacity}mAh ${this.cells}S ${typeLabel}`;
+            }
+
+            getMaxVoltagePerCell() {
+                switch(this.type) {
+                    case 'lipo': return 4.20;
+                    case 'hv': return 4.35;
+                    case 'lion': return 4.10;
+                }
+            }
+
+            getSafeChargingCurrent() {
+                const totalCapacity = this.capacity * this.count * this.parallelCells;
+                return totalCapacity / 1000; // 1C rate
+            }
+
+            getCRating(current) {
+                const totalCapacity = this.capacity * this.count * this.parallelCells;
+                return current / (totalCapacity / 1000);
+            }
+
+            getSafetyRating(current, voltage) {
+                const cRating = this.getCRating(current);
+                const maxVoltage = this.getMaxVoltagePerCell();
+                const t = translations[currentLanguage];
+                
+                if (voltage < maxVoltage - 0.2) {
+                    // Below recommended voltage by more than 0.2V - "voltage too low" feedback
+                    const voltageTooLowMsg = currentLanguage === 'zh' ? 
+                        '电压过低 - Voltage too low' :
+                        'Voltage too low - 电压过低';
+                    
+                    return { level: 'dangerous', message: voltageTooLowMsg };
+                } else if (voltage < maxVoltage - 0.05) {
+                    // Below recommended voltage - "wrong voltage" feedback
+                    const typeMap = {
+                        'lipo': '锂聚合物电池',
+                        'hv': '高压锂聚合物电池',
+                        'lion': '锂离子电池'
+                    };
+                    const typeLabel = currentLanguage === 'zh' ? typeMap[this.type] : 
+                                     (this.type === 'hv' ? 'HV LiPo' : this.type === 'lion' ? 'Li-ion' : 'LiPo');
+                    
+                    const wrongVoltageMsg = currentLanguage === 'zh' ? 
+                        `电压错误！${typeLabel}应为${maxVoltage.toFixed(2)}V。` :
+                        `Wrong voltage! ${typeLabel} should be ${maxVoltage.toFixed(2)}V.`;
+                    
+                    return { level: 'dangerous', message: wrongVoltageMsg };
+                } else if (voltage > maxVoltage + 0.05) {
+                    // Above recommended voltage - keep "dangerous" feedback
+                    const typeMap = {
+                        'lipo': '锂聚合物电池',
+                        'hv': '高压锂聚合物电池',
+                        'lion': '锂离子电池'
+                    };
+                    const typeLabel = currentLanguage === 'zh' ? typeMap[this.type] : 
+                                     (this.type === 'hv' ? 'HV LiPo' : this.type === 'lion' ? 'Li-ion' : 'LiPo');
+                    
+                    return { 
+                        level: 'dangerous', 
+                        message: t.incorrectVoltage
+                            .replace('{expected}', maxVoltage.toFixed(2))
+                            .replace('{type}', typeLabel)
+                    };
+                }
+
+                if (this.type === 'lipo' || this.type === 'hv') {
+                    if (cRating <= 1.0) {
+                        return { level: 'safe', message: t.safeCharging.replace('{rate}', cRating.toFixed(1)) };
+                    } else if (cRating <= 2.0) {
+                        return { level: 'fast', message: t.fastCharging.replace('{rate}', cRating.toFixed(1)) };
+                    } else if (cRating <= 3.0) {
+                        return { level: 'risky', message: t.riskyCharging.replace('{rate}', cRating.toFixed(1)) };
+                    } else {
+                        return { level: 'dangerous', message: t.dangerousCharging.replace('{rate}', cRating.toFixed(1)) };
+                    }
+                } else { // lion
+                    if (cRating <= 0.5) {
+                        return { level: 'safe', message: t.safeCharging.replace('{rate}', cRating.toFixed(1)) };
+                    } else if (cRating <= 1.0) {
+                        return { level: 'fast', message: t.fastCharging.replace('{rate}', cRating.toFixed(1)) };
+                    } else {
+                        return { level: 'dangerous', message: t.tooHighLiion.replace('{rate}', cRating.toFixed(1)) };
+                    }
+                }
+            }
+
+            getMinAcceptableVoltage() {
+                switch(this.type) {
+                    case 'lipo':
+                    case 'hv':
+                        return this.cells === 1 ? 3.0 : 3.5;
+                    case 'lion':
+                        return this.cells === 1 ? 2.8 : 3.0;
+                }
+            }
+
+            getStorageVoltage() {
+                switch(this.type) {
+                    case 'lipo': return 3.8;
+                    case 'hv': return 3.85;
+                    case 'lion': return 3.7;
+                }
+            }
+
+            validateVoltage(voltage) {
+                const maxVoltage = this.getMaxVoltagePerCell();
+                const minVoltage = this.getMinAcceptableVoltage();
+                const t = translations[currentLanguage];
+                
+                if (Math.abs(voltage - maxVoltage) < 0.05) {
+                    return { level: 'good', message: t.correctChargingVoltage };
+                } else if (voltage >= minVoltage && voltage <= maxVoltage) {
+                    return { level: 'acceptable', message: t.acceptableVoltageRange };
+                } else {
+                    return { level: 'dangerous', message: t.dangerousVoltageLevel };
+                }
+            }
+
+            validateCurrent(current) {
+                const cRating = this.getCRating(current);
+                const t = translations[currentLanguage];
+                
+                if (this.type === 'lipo' || this.type === 'hv') {
+                    if (cRating <= 1.0) {
+                        return { level: 'good', message: t.safeRate.replace('{rate}', cRating.toFixed(1)) };
+                    } else if (cRating <= 2.0) {
+                        return { level: 'acceptable', message: t.fastRate.replace('{rate}', cRating.toFixed(1)) };
+                    } else {
+                        return { level: 'dangerous', message: t.dangerousRate.replace('{rate}', cRating.toFixed(1)) };
+                    }
+                } else {
+                    if (cRating <= 0.5) {
+                        return { level: 'good', message: t.safeRate.replace('{rate}', cRating.toFixed(1)) };
+                    } else if (cRating <= 1.0) {
+                        return { level: 'acceptable', message: t.fastRate.replace('{rate}', cRating.toFixed(1)) };
+                    } else {
+                        return { level: 'dangerous', message: t.dangerousRate.replace('{rate}', cRating.toFixed(1)) };
+                    }
+                }
+            }
+
+            validateMinVoltage(minVoltage) {
+                const correctMinVoltage = this.getMinAcceptableVoltage();
+                const t = translations[currentLanguage];
+                
+                if (Math.abs(minVoltage - correctMinVoltage) < 0.05) {
+                    return { level: 'good', message: t.correctMinimumVoltage };
+                } else if (minVoltage >= correctMinVoltage - 0.2 && minVoltage <= correctMinVoltage + 0.2) {
+                    return { level: 'acceptable', message: t.closeToCorrectMinimum };
+                } else {
+                    return { level: 'dangerous', message: t.shouldBeMinVoltage.replace('{voltage}', correctMinVoltage) };
+                }
+            }
+
+            validateStorageVoltage(storageVoltage) {
+                const correctStorageVoltage = this.getStorageVoltage();
+                const t = translations[currentLanguage];
+                
+                if (Math.abs(storageVoltage - correctStorageVoltage) < 0.05) {
+                    return { level: 'good', message: t.correctStorageVoltage };
+                } else if (storageVoltage >= correctStorageVoltage - 0.1 && storageVoltage <= correctStorageVoltage + 0.1) {
+                    return { level: 'acceptable', message: t.closeToCorrectStorage };
+                } else {
+                    return { level: 'dangerous', message: t.shouldBeStorageVoltage.replace('{voltage}', correctStorageVoltage) };
+                }
+            }
+        }
+
+        function generateBattery(difficulty) {
+            switch (difficulty) {
+                case 1: // Level 1 - Single LiPo (1-8S, 300-1800mAh)
+                    const cells1 = Math.floor(Math.random() * 8) + 1;
+                    const capacity1 = Math.floor(Math.random() * 31) * 50 + 300;
+                    return new Battery('lipo', cells1, capacity1);
+
+                case 2: // Level 2 - LiPo and HV LiPo
+                    const cells2 = Math.floor(Math.random() * 8) + 1;
+                    const capacity2 = Math.floor(Math.random() * 31) * 50 + 300;
+                    const isHV2 = Math.random() < 0.5;
+                    return new Battery(isHV2 ? 'hv' : 'lipo', cells2, capacity2);
+
+                case 3: // Level 3 - Li-ion, LiPo, and HV LiPo
+                    const rand3 = Math.random();
+                    const cells3 = Math.floor(Math.random() * 8) + 1;
+                    
+                    if (rand3 < 0.33) {
+                        // LiPo
+                        const capacity3 = Math.floor(Math.random() * 31) * 50 + 300;
+                        return new Battery('lipo', cells3, capacity3);
+                    } else if (rand3 < 0.66) {
+                        // HV LiPo
+                        const capacity3 = Math.floor(Math.random() * 31) * 50 + 300;
+                        return new Battery('hv', cells3, capacity3);
+                    } else {
+                        // Li-ion
+                        const capacity3 = Math.floor(Math.random() * 5) * 500 + 3000;
+                        return new Battery('lion', cells3, capacity3);
+                    }
+
+                case 4: // Level 4 - Balance charging (1-4 batteries of same type)
+                    const rand4 = Math.random();
+                    const cells4 = Math.floor(Math.random() * 8) + 1;
+                    const count4 = Math.floor(Math.random() * 4) + 1;
+                    
+                    if (rand4 < 0.33) {
+                        const capacity4 = Math.floor(Math.random() * 31) * 50 + 300;
+                        return new Battery('lipo', cells4, capacity4, count4);
+                    } else if (rand4 < 0.66) {
+                        const capacity4 = Math.floor(Math.random() * 31) * 50 + 300;
+                        return new Battery('hv', cells4, capacity4, count4);
+                    } else {
+                        const capacity4 = Math.floor(Math.random() * 5) * 500 + 3000;
+                        return new Battery('lion', cells4, capacity4, count4);
+                    }
+
+                case 5: // Level 5 - Mixed with parallel cells up to 4P and 1-4 batteries
+                    const rand5 = Math.random();
+                    const cells5 = Math.floor(Math.random() * 8) + 1;
+                    const count5 = Math.floor(Math.random() * 4) + 1;
+                    
+                    if (rand5 < 0.25) {
+                        const capacity5 = Math.floor(Math.random() * 31) * 50 + 300;
+                        return new Battery('lipo', cells5, capacity5, count5);
+                    } else if (rand5 < 0.5) {
+                        const capacity5 = Math.floor(Math.random() * 31) * 50 + 300;
+                        return new Battery('hv', cells5, capacity5, count5);
+                    } else {
+                        const capacity5 = Math.floor(Math.random() * 5) * 500 + 3000;
+                        const parallelCells5 = Math.floor(Math.random() * 4) + 1; // 1P to 4P
+                        return new Battery('lion', cells5, capacity5, count5, parallelCells5);
+                    }
+            }
+        }
+
+        function renderBatteryVisualization(battery) {
+            const container = document.getElementById('batteryVisualization');
+            container.innerHTML = '';
+
+            if (battery.count > 1) {
+                // Multiple batteries - show visual multiplier
+                const multipleContainer = document.createElement('div');
+                multipleContainer.className = 'multiple-batteries';
+
+                for (let i = 0; i < Math.min(battery.count, 3); i++) {
+                    if (i > 0) {
+                        const plus = document.createElement('div');
+                        plus.className = 'parallel-indicator';
+                        plus.textContent = '+';
+                        multipleContainer.appendChild(plus);
+                    }
+                    
+                    const batteryElement = createBatteryElement(battery);
+                    multipleContainer.appendChild(batteryElement);
+                }
+
+                // Add multiplier indicator
+                const multiplier = document.createElement('div');
+                multiplier.className = 'battery-multiplier';
+                multiplier.textContent = `×${battery.count}`;
+                multipleContainer.appendChild(multiplier);
+
+                container.appendChild(multipleContainer);
+            } else if (battery.type === 'lion' && battery.parallelCells > 1) {
+                // Li-ion with parallel cells
+                const lionContainer = document.createElement('div');
+                lionContainer.className = 'lion-parallel';
+                
+                for (let p = 0; p < battery.parallelCells; p++) {
+                    const seriesContainer = document.createElement('div');
+                    seriesContainer.className = 'lion-battery';
+                    
+                    for (let s = 0; s < battery.cells; s++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'lion-cell';
+                        seriesContainer.appendChild(cell);
+                    }
+                    
+                    lionContainer.appendChild(seriesContainer);
+                }
+                
+                container.appendChild(lionContainer);
+            } else {
+                // Standard single battery
+                const batteryElement = createBatteryElement(battery);
+                container.appendChild(batteryElement);
+            }
+        }
+
+        function createBatteryElement(battery) {
+            const batteryContainer = document.createElement('div');
+            
+            if (battery.type === 'lipo' || battery.type === 'hv') {
+                batteryContainer.className = 'lipo-battery';
+                
+                const baseWidth = 60;
+                const widthMultiplier = Math.min(battery.capacity / 1000, 2);
+                const cellWidth = Math.floor(baseWidth * widthMultiplier);
+                
+                for (let i = 0; i < battery.cells; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = battery.type === 'hv' ? 'lipo-cell hv' : 'lipo-cell';
+                    cell.style.width = cellWidth + 'px';
+                    batteryContainer.appendChild(cell);
+                }
+            } else {
+                batteryContainer.className = 'lion-battery';
+                
+                for (let i = 0; i < battery.cells; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'lion-cell';
+                    batteryContainer.appendChild(cell);
+                }
+            }
+            
+            return batteryContainer;
+        }
+
+        function generateNewQuestion() {
+            currentBattery = generateBattery(currentDifficulty);
+            
+            document.getElementById('batteryLabel').textContent = currentBattery.getLabel();
+            document.getElementById('cellCountDisplay').textContent = `${currentBattery.cells}S ${translations[currentLanguage].detected}`;
+            
+            // Reset to default values
+            document.getElementById('voltageDisplay').value = '3.00';
+            document.getElementById('currentDisplay').value = '0.00';
+            document.getElementById('minVoltageDisplay').value = '2.00';
+            document.getElementById('storageVoltageDisplay').value = '3.00';
+            
+            // Hide all feedback
+            hideAllFeedback();
+            
+            document.getElementById('resultDisplay').style.display = 'none';
+            
+            renderBatteryVisualization(currentBattery);
+        }
+
+        function adjustVoltage(delta) {
+            const display = document.getElementById('voltageDisplay');
+            const currentValue = parseFloat(display.value);
+            const newValue = Math.max(3.00, Math.min(4.50, currentValue + delta));
+            display.value = newValue.toFixed(1);
+        }
+
+        function adjustCurrent(delta) {
+            const display = document.getElementById('currentDisplay');
+            const currentValue = parseFloat(display.value);
+            const newValue = Math.max(0.0, Math.min(50.0, currentValue + delta));
+            display.value = newValue.toFixed(1);
+        }
+
+        function adjustMinVoltage(delta) {
+            const display = document.getElementById('minVoltageDisplay');
+            const currentValue = parseFloat(display.value);
+            const newValue = Math.max(2.00, Math.min(4.00, currentValue + delta));
+            display.value = newValue.toFixed(2);
+        }
+
+        function adjustStorageVoltage(delta) {
+            const display = document.getElementById('storageVoltageDisplay');
+            const currentValue = parseFloat(display.value);
+            const newValue = Math.max(3.00, Math.min(4.00, currentValue + delta));
+            display.value = newValue.toFixed(2);
+        }
+
+        function updateFieldValidation(fieldId, validationResult) {
+            const field = document.getElementById(fieldId);
+            const feedbackId = fieldId.replace('Display', 'Feedback');
+            const feedback = document.getElementById(feedbackId);
+            
+            // Remove existing classes
+            field.className = field.className.replace(/\b(good|acceptable|dangerous)\b/g, '').trim();
+            
+            // Add new class and show feedback
+            field.classList.add(validationResult.level);
+            feedback.className = `field-feedback feedback-${validationResult.level}`;
+            feedback.textContent = validationResult.message;
+            feedback.style.display = 'block';
+        }
+
+        function hideAllFeedback() {
+            const feedbacks = ['voltageFeedback', 'currentFeedback', 'minVoltageFeedback', 'storageVoltageFeedback'];
+            const fields = ['voltageDisplay', 'currentDisplay', 'minVoltageDisplay', 'storageVoltageDisplay'];
+            
+            feedbacks.forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+            
+            fields.forEach(id => {
+                const field = document.getElementById(id);
+                field.className = field.className.replace(/\b(good|acceptable|dangerous)\b/g, '').trim();
+            });
+        }
+
+        function checkAnswer() {
+            const voltage = parseFloat(document.getElementById('voltageDisplay').value);
+            const current = parseFloat(document.getElementById('currentDisplay').value);
+            const minVoltageToggle = document.getElementById('minVoltageToggle').checked;
+            const storageVoltageToggle = document.getElementById('storageVoltageToggle').checked;
+            
+            // Validate all visible fields
+            updateFieldValidation('voltageDisplay', currentBattery.validateVoltage(voltage));
+            updateFieldValidation('currentDisplay', currentBattery.validateCurrent(current));
+            
+            if (minVoltageToggle) {
+                const minVoltage = parseFloat(document.getElementById('minVoltageDisplay').value);
+                updateFieldValidation('minVoltageDisplay', currentBattery.validateMinVoltage(minVoltage));
+            }
+            
+            if (storageVoltageToggle) {
+                const storageVoltage = parseFloat(document.getElementById('storageVoltageDisplay').value);
+                updateFieldValidation('storageVoltageDisplay', currentBattery.validateStorageVoltage(storageVoltage));
+            }
+            
+            // Show overall result
+            const result = currentBattery.getSafetyRating(current, voltage);
+            const resultDisplay = document.getElementById('resultDisplay');
+            
+            resultDisplay.className = `result-display result-${result.level}`;
+            resultDisplay.textContent = result.message;
+            resultDisplay.style.display = 'block';
+            
+            // Result is now displayed, skip button remains visible
+        }
+
+        function updateLanguage(lang) {
+            currentLanguage = lang;
+            const t = translations[lang];
+            
+            document.getElementById('mainTitle').textContent = t.title;
+            document.getElementById('subtitle').textContent = t.subtitle;
+            document.getElementById('difficultyTitle').textContent = t.difficultyTitle;
+            document.getElementById('level1').textContent = t.level1;
+            document.getElementById('level2').textContent = t.level2;
+            document.getElementById('level3').textContent = t.level3;
+            document.getElementById('level4').textContent = t.level4;
+            document.getElementById('level5').textContent = t.level5;
+            document.getElementById('chargerReady').textContent = t.ready;
+            document.getElementById('voltageLabel').textContent = t.voltageLabel;
+            document.getElementById('currentLabel').textContent = t.currentLabel;
+            document.getElementById('minVoltageLabel').textContent = t.minVoltageLabel;
+            document.getElementById('storageVoltageLabel').textContent = t.storageVoltageLabel;
+            document.getElementById('checkBtn').textContent = t.checkBtn;
+            document.getElementById('skipQuestionBtn').textContent = currentLanguage === 'zh' ? '跳过题目' : 'Skip Question';
+            document.getElementById('minVoltageToggleLabel').textContent = t.checkMinVoltage;
+            document.getElementById('storageVoltageToggleLabel').textContent = t.checkStorageVoltage;
+            
+            if (currentBattery) {
+                document.getElementById('cellCountDisplay').textContent = `${currentBattery.cells}${t.detected}`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const difficultyButtons = document.querySelectorAll('.difficulty-btn');
+            const languageButtons = document.querySelectorAll('.language-btn');
+            const minVoltageToggle = document.getElementById('minVoltageToggle');
+            const storageVoltageToggle = document.getElementById('storageVoltageToggle');
+            
+            difficultyButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    difficultyButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    currentDifficulty = parseInt(this.dataset.difficulty);
+                    generateNewQuestion();
+                });
+            });
+            
+            languageButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    languageButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    updateLanguage(this.dataset.lang);
+                });
+            });
+            
+            // Toggle visibility of optional fields
+            minVoltageToggle.addEventListener('change', function() {
+                const group = document.getElementById('minVoltageGroup');
+                group.style.display = this.checked ? 'flex' : 'none';
+            });
+            
+            storageVoltageToggle.addEventListener('change', function() {
+                const group = document.getElementById('storageVoltageGroup');
+                group.style.display = this.checked ? 'flex' : 'none';
+            });
+            
+            generateNewQuestion();
+        });
+
+        document.getElementById('voltageDisplay').addEventListener('input', function() {
+            let value = parseFloat(this.value);
+            if (isNaN(value)) value = 3.00;
+            value = Math.max(3.00, Math.min(4.50, value));
+            this.value = value.toFixed(1);
+        });
+
+        document.getElementById('currentDisplay').addEventListener('input', function() {
+            let value = parseFloat(this.value);
+            if (isNaN(value)) value = 0.0;
+            value = Math.max(0.0, Math.min(50.0, value));
+            this.value = value.toFixed(1);
+        });
+
+        document.getElementById('minVoltageDisplay').addEventListener('input', function() {
+            let value = parseFloat(this.value);
+            if (isNaN(value)) value = 2.00;
+            value = Math.max(2.00, Math.min(4.00, value));
+            this.value = value.toFixed(2);
+        });
+
+        document.getElementById('storageVoltageDisplay').addEventListener('input', function() {
+            let value = parseFloat(this.value);
+            if (isNaN(value)) value = 3.00;
+            value = Math.max(3.00, Math.min(4.00, value));
+            this.value = value.toFixed(2);
+        });
+    </script>
+</body>
+</html>
