@@ -520,11 +520,11 @@
             <div class="feature-toggles">
                 <div class="toggle-option">
                     <input type="checkbox" id="minVoltageToggle" class="toggle-checkbox">
-                    <label for="minVoltageToggle">Check Minimum Voltage</label>
+                    <label for="minVoltageToggle" id="minVoltageToggleLabel">Check Minimum Voltage</label>
                 </div>
                 <div class="toggle-option">
                     <input type="checkbox" id="storageVoltageToggle" class="toggle-checkbox">
-                    <label for="storageVoltageToggle">Check Storage Voltage</label>
+                    <label for="storageVoltageToggle" id="storageVoltageToggleLabel">Check Storage Voltage</label>
                 </div>
             </div>
             <div class="language-selector">
@@ -613,33 +613,81 @@
                 title: "LiPo Battery Charging Trainer",
                 subtitle: "Learn safe battery charging practices with interactive flashcards",
                 difficultyTitle: "Select Difficulty Level",
-                level1: "Level 1",
-                level2: "Level 2", 
-                level3: "Level 3",
-                level4: "Level 4",
-                level5: "Level 5",
+                level1: "Level 1 - Single LiPo (1-8S)",
+                level2: "Level 2 - LiPo & HV LiPo", 
+                level3: "Level 3 - All Battery Types",
+                level4: "Level 4 - Balance Charging",
+                level5: "Level 5 - Advanced Parallel",
                 detected: "S Battery Detected",
                 ready: "Ready to Configure Charging Parameters",
                 voltageLabel: "Max Voltage per Cell (V)",
                 currentLabel: "Charging Current (A)",
+                minVoltageLabel: "Minimum Acceptable Voltage (V)",
+                storageVoltageLabel: "Storage Voltage per Cell (V)",
                 checkBtn: "Check Charging Parameters",
-                nextBtn: "Next Question"
+                nextBtn: "Next Question",
+                checkMinVoltage: "Check Minimum Voltage",
+                checkStorageVoltage: "Check Storage Voltage",
+                // Safety messages
+                safeCharging: "Safe charging at {rate}C rate.",
+                fastCharging: "Fast charging at {rate}C rate. Low risk but monitor temperature.",
+                riskyCharging: "Risky charging at {rate}C rate. High risk of damage.",
+                dangerousCharging: "Not recommended! {rate}C rate is extremely dangerous.",
+                incorrectVoltage: "Incorrect voltage setting! Expected {expected}V for {type}. This could damage the battery or cause fire.",
+                tooHighLiion: "Not recommended! {rate}C rate is too high for Li-ion.",
+                // Field feedback
+                correctChargingVoltage: "Correct charging voltage",
+                acceptableVoltageRange: "Acceptable voltage range",
+                dangerousVoltageLevel: "Dangerous voltage level!",
+                safeRate: "Safe {rate}C rate",
+                fastRate: "Fast {rate}C rate",
+                dangerousRate: "Dangerous {rate}C rate!",
+                correctMinimumVoltage: "Correct minimum voltage",
+                closeToCorrectMinimum: "Close to correct minimum",
+                shouldBeMinVoltage: "Should be {voltage}V",
+                correctStorageVoltage: "Correct storage voltage",
+                closeToCorrectStorage: "Close to correct storage voltage",
+                shouldBeStorageVoltage: "Should be {voltage}V"
             },
             zh: {
                 title: "锂电池充电训练器",
                 subtitle: "通过互动卡片学习安全的电池充电方法",
                 difficultyTitle: "选择难度级别",
-                level1: "级别 1",
-                level2: "级别 2",
-                level3: "级别 3", 
-                level4: "级别 4",
-                level5: "级别 5",
-                detected: "S 电池已检测",
+                level1: "级别 1 - 单个锂聚合物电池 (1-8串)",
+                level2: "级别 2 - 锂聚合物电池和高压锂聚合物电池",
+                level3: "级别 3 - 所有电池类型",
+                level4: "级别 4 - 平衡充电",
+                level5: "级别 5 - 高级并联充电",
+                detected: "串 电池已检测",
                 ready: "准备配置充电参数",
-                voltageLabel: "每格最大电压 (V)",
+                voltageLabel: "每节电池最大电压 (V)",
                 currentLabel: "充电电流 (A)",
+                minVoltageLabel: "最低可接受电压 (V)",
+                storageVoltageLabel: "每节电池存储电压 (V)",
                 checkBtn: "检查充电参数",
-                nextBtn: "下一题"
+                nextBtn: "下一题",
+                checkMinVoltage: "检查最低电压",
+                checkStorageVoltage: "检查存储电压",
+                // Safety messages
+                safeCharging: "{rate}C倍率安全充电。",
+                fastCharging: "{rate}C倍率快速充电。风险较低但需监控温度。",
+                riskyCharging: "{rate}C倍率危险充电。损坏风险很高。",
+                dangerousCharging: "不推荐！{rate}C倍率极其危险。",
+                incorrectVoltage: "电压设置错误！{type}应为{expected}V。这可能损坏电池或引起火灾。",
+                tooHighLiion: "不推荐！{rate}C倍率对锂离子电池过高。",
+                // Field feedback
+                correctChargingVoltage: "充电电压正确",
+                acceptableVoltageRange: "可接受的电压范围",
+                dangerousVoltageLevel: "危险电压级别！",
+                safeRate: "安全 {rate}C倍率",
+                fastRate: "快速 {rate}C倍率",
+                dangerousRate: "危险 {rate}C倍率！",
+                correctMinimumVoltage: "最低电压正确",
+                closeToCorrectMinimum: "接近正确的最低值",
+                shouldBeMinVoltage: "应为 {voltage}V",
+                correctStorageVoltage: "存储电压正确",
+                closeToCorrectStorage: "接近正确的存储电压",
+                shouldBeStorageVoltage: "应为 {voltage}V"
             }
         };
 
@@ -696,31 +744,42 @@
             getSafetyRating(current, voltage) {
                 const cRating = this.getCRating(current);
                 const correctVoltage = Math.abs(voltage - this.getMaxVoltagePerCell()) < 0.05;
+                const t = translations[currentLanguage];
                 
                 if (!correctVoltage) {
+                    const typeMap = {
+                        'lipo': '锂聚合物电池',
+                        'hv': '高压锂聚合物电池',
+                        'lion': '锂离子电池'
+                    };
+                    const typeLabel = currentLanguage === 'zh' ? typeMap[this.type] : 
+                                     (this.type === 'hv' ? 'HV LiPo' : this.type === 'lion' ? 'Li-ion' : 'LiPo');
+                    
                     return { 
                         level: 'dangerous', 
-                        message: `Incorrect voltage setting! Expected ${this.getMaxVoltagePerCell().toFixed(2)}V for ${this.type === 'hv' ? 'HV ' : ''}${this.type === 'lion' ? 'Li-ion' : 'LiPo'}. This could damage the battery or cause fire.` 
+                        message: t.incorrectVoltage
+                            .replace('{expected}', this.getMaxVoltagePerCell().toFixed(2))
+                            .replace('{type}', typeLabel)
                     };
                 }
 
                 if (this.type === 'lipo' || this.type === 'hv') {
                     if (cRating <= 1.0) {
-                        return { level: 'safe', message: `Safe charging at ${cRating.toFixed(1)}C rate.` };
+                        return { level: 'safe', message: t.safeCharging.replace('{rate}', cRating.toFixed(1)) };
                     } else if (cRating <= 2.0) {
-                        return { level: 'fast', message: `Fast charging at ${cRating.toFixed(1)}C rate. Low risk but monitor temperature.` };
+                        return { level: 'fast', message: t.fastCharging.replace('{rate}', cRating.toFixed(1)) };
                     } else if (cRating <= 3.0) {
-                        return { level: 'risky', message: `Risky charging at ${cRating.toFixed(1)}C rate. High risk of damage.` };
+                        return { level: 'risky', message: t.riskyCharging.replace('{rate}', cRating.toFixed(1)) };
                     } else {
-                        return { level: 'dangerous', message: `Not recommended! ${cRating.toFixed(1)}C rate is extremely dangerous.` };
+                        return { level: 'dangerous', message: t.dangerousCharging.replace('{rate}', cRating.toFixed(1)) };
                     }
                 } else { // lion
                     if (cRating <= 0.5) {
-                        return { level: 'safe', message: `Safe charging at ${cRating.toFixed(1)}C rate.` };
+                        return { level: 'safe', message: t.safeCharging.replace('{rate}', cRating.toFixed(1)) };
                     } else if (cRating <= 1.0) {
-                        return { level: 'fast', message: `Fast charging at ${cRating.toFixed(1)}C rate. Low risk but monitor temperature.` };
+                        return { level: 'fast', message: t.fastCharging.replace('{rate}', cRating.toFixed(1)) };
                     } else {
-                        return { level: 'dangerous', message: `Not recommended! ${cRating.toFixed(1)}C rate is too high for Li-ion.` };
+                        return { level: 'dangerous', message: t.tooHighLiion.replace('{rate}', cRating.toFixed(1)) };
                     }
                 }
             }
@@ -746,59 +805,63 @@
             validateVoltage(voltage) {
                 const maxVoltage = this.getMaxVoltagePerCell();
                 const minVoltage = this.getMinAcceptableVoltage();
+                const t = translations[currentLanguage];
                 
                 if (Math.abs(voltage - maxVoltage) < 0.05) {
-                    return { level: 'good', message: 'Correct charging voltage' };
+                    return { level: 'good', message: t.correctChargingVoltage };
                 } else if (voltage >= minVoltage && voltage <= maxVoltage) {
-                    return { level: 'acceptable', message: 'Acceptable voltage range' };
+                    return { level: 'acceptable', message: t.acceptableVoltageRange };
                 } else {
-                    return { level: 'dangerous', message: 'Dangerous voltage level!' };
+                    return { level: 'dangerous', message: t.dangerousVoltageLevel };
                 }
             }
 
             validateCurrent(current) {
                 const cRating = this.getCRating(current);
+                const t = translations[currentLanguage];
                 
                 if (this.type === 'lipo' || this.type === 'hv') {
                     if (cRating <= 1.0) {
-                        return { level: 'good', message: `Safe ${cRating.toFixed(1)}C rate` };
+                        return { level: 'good', message: t.safeRate.replace('{rate}', cRating.toFixed(1)) };
                     } else if (cRating <= 2.0) {
-                        return { level: 'acceptable', message: `Fast ${cRating.toFixed(1)}C rate` };
+                        return { level: 'acceptable', message: t.fastRate.replace('{rate}', cRating.toFixed(1)) };
                     } else {
-                        return { level: 'dangerous', message: `Dangerous ${cRating.toFixed(1)}C rate!` };
+                        return { level: 'dangerous', message: t.dangerousRate.replace('{rate}', cRating.toFixed(1)) };
                     }
                 } else {
                     if (cRating <= 0.5) {
-                        return { level: 'good', message: `Safe ${cRating.toFixed(1)}C rate` };
+                        return { level: 'good', message: t.safeRate.replace('{rate}', cRating.toFixed(1)) };
                     } else if (cRating <= 1.0) {
-                        return { level: 'acceptable', message: `Fast ${cRating.toFixed(1)}C rate` };
+                        return { level: 'acceptable', message: t.fastRate.replace('{rate}', cRating.toFixed(1)) };
                     } else {
-                        return { level: 'dangerous', message: `Dangerous ${cRating.toFixed(1)}C rate!` };
+                        return { level: 'dangerous', message: t.dangerousRate.replace('{rate}', cRating.toFixed(1)) };
                     }
                 }
             }
 
             validateMinVoltage(minVoltage) {
                 const correctMinVoltage = this.getMinAcceptableVoltage();
+                const t = translations[currentLanguage];
                 
                 if (Math.abs(minVoltage - correctMinVoltage) < 0.05) {
-                    return { level: 'good', message: 'Correct minimum voltage' };
+                    return { level: 'good', message: t.correctMinimumVoltage };
                 } else if (minVoltage >= correctMinVoltage - 0.2 && minVoltage <= correctMinVoltage + 0.2) {
-                    return { level: 'acceptable', message: 'Close to correct minimum' };
+                    return { level: 'acceptable', message: t.closeToCorrectMinimum };
                 } else {
-                    return { level: 'dangerous', message: `Should be ${correctMinVoltage}V` };
+                    return { level: 'dangerous', message: t.shouldBeMinVoltage.replace('{voltage}', correctMinVoltage) };
                 }
             }
 
             validateStorageVoltage(storageVoltage) {
                 const correctStorageVoltage = this.getStorageVoltage();
+                const t = translations[currentLanguage];
                 
                 if (Math.abs(storageVoltage - correctStorageVoltage) < 0.05) {
-                    return { level: 'good', message: 'Correct storage voltage' };
+                    return { level: 'good', message: t.correctStorageVoltage };
                 } else if (storageVoltage >= correctStorageVoltage - 0.1 && storageVoltage <= correctStorageVoltage + 0.1) {
-                    return { level: 'acceptable', message: 'Close to correct storage voltage' };
+                    return { level: 'acceptable', message: t.closeToCorrectStorage };
                 } else {
-                    return { level: 'dangerous', message: `Should be ${correctStorageVoltage}V` };
+                    return { level: 'dangerous', message: t.shouldBeStorageVoltage.replace('{voltage}', correctStorageVoltage) };
                 }
             }
         }
@@ -1066,11 +1129,15 @@
             document.getElementById('chargerReady').textContent = t.ready;
             document.getElementById('voltageLabel').textContent = t.voltageLabel;
             document.getElementById('currentLabel').textContent = t.currentLabel;
+            document.getElementById('minVoltageLabel').textContent = t.minVoltageLabel;
+            document.getElementById('storageVoltageLabel').textContent = t.storageVoltageLabel;
             document.getElementById('checkBtn').textContent = t.checkBtn;
             document.getElementById('newQuestionBtn').textContent = t.nextBtn;
+            document.getElementById('minVoltageToggleLabel').textContent = t.checkMinVoltage;
+            document.getElementById('storageVoltageToggleLabel').textContent = t.checkStorageVoltage;
             
             if (currentBattery) {
-                document.getElementById('cellCountDisplay').textContent = `${currentBattery.cells}S ${t.detected}`;
+                document.getElementById('cellCountDisplay').textContent = `${currentBattery.cells}${t.detected}`;
             }
         }
 
